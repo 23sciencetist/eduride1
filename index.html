@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EduRide — Slide Prototype (Final)</title>
+  <style>
+    :root{--bg:#f7fbff;--primary:#4F9DDE;--accent:#FFD95A;--muted:#6b7280;--card:#ffffff}
+    *{box-sizing:border-box;transition:all 0.6s ease;}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;margin:0;background:var(--bg);color:#0f172a;overflow:hidden}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:linear-gradient(90deg,rgba(79,157,222,0.06),transparent);}
+    .logo{display:flex;gap:10px;align-items:center;font-weight:700;color:var(--primary)}
+    .logo .badge{background:var(--primary);color:#fff;padding:8px;border-radius:10px;font-weight:800}
+    main{position:relative;width:100vw;height:calc(100vh - 80px);overflow:hidden}
+    section.slide{position:absolute;top:0;left:100%;width:100%;height:100%;opacity:0;transform:translateX(50px);display:flex;align-items:center;justify-content:center;text-align:center}
+    section.slide.active{left:0;opacity:1;transform:translateX(0)}
+    section.slide.prev{left:-100%;opacity:0;transform:translateX(-50px)}
+    .card{background:var(--card);padding:18px;border-radius:14px;box-shadow:0 6px 18px rgba(15,23,42,0.06);max-width:500px;width:90%;}
+    .btn{background:var(--primary);color:#fff;padding:12px 18px;border-radius:12px;border:0;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;color:#4F9DDE;border:1px solid rgba(79,157,222,0.18)}
+    footer{padding:20px;text-align:center;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px;margin-bottom:8px;border-radius:10px;border:1px solid #e6edf6}
+    .drivers-grid{display:grid;gap:12px}
+    .driver{background:#fff;padding:12px;border-radius:10px;cursor:pointer;border:1px solid #eee}
+    .status.available{background:#ecfdf5;color:#065f46;padding:4px 6px;border-radius:6px;font-size:13px}
+    h2,h3{margin-top:0}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="badge">ER</div><div>EduRide <div class="small muted">Ojek Mahasiswa</div></div></div>
+  </header>
+
+  <main>
+    <!-- Slide 0: Pilih Layanan -->
+    <section class="slide active" id="slideService">
+      <div class="card">
+        <h2>Pilih Jenis Layanan EduRide</h2>
+        <p>Pilih salah satu layanan di bawah ini untuk melanjutkan pemesanan.</p>
+        <button class="btn" id="btnOjek">🚗 Ojek / Antar-Jemput</button><br><br>
+        <button class="btn" id="btnDelivery">📦 Delivery</button>
+      </div>
+    </section>
+
+    <!-- Slide 1: Form -->
+    <section class="slide" id="slideForm">
+      <div class="card">
+        <h2>Pesan EduRide</h2>
+        <p id="selectedServiceText" style="color:#6b7280;margin-top:-4px;margin-bottom:8px;"></p>
+        <label>Nama Customer</label>
+        <input id="inputNama" type="text" placeholder="Masukkan nama..."/>
+        <label>Tujuan / Lokasi</label>
+        <input id="inputTujuan" type="text" placeholder="Contoh: Gerbang Kampus"/>
+        <button class="btn" id="btnCariDriver">Cari Driver Terdekat</button><br><br>
+        <button class="btn ghost" id="btnBack0">Kembali</button>
+      </div>
+    </section>
+
+    <!-- Slide 2: Driver -->
+    <section class="slide" id="slideDriver">
+      <div class="card">
+        <h3>Driver Terdekat</h3>
+        <div class="drivers-grid" id="driversContainer"></div>
+        <button class="btn ghost" id="btnBack1">Kembali</button>
+      </div>
+    </section>
+
+    <!-- Slide 3: Pembayaran -->
+    <section class="slide" id="slidePayment">
+      <div class="card">
+        <h3>Pembayaran</h3>
+        <p id="selectedDriverInfo"></p>
+        <label>Pilih Metode Pembayaran</label>
+        <select id="selectPayment">
+          <option value="tunai">Tunai</option>
+          <option value="qris">QRIS</option>
+          <option value="transfer">Transfer</option>
+        </select>
+        <button class="btn" id="btnConfirmPay">Pesan & Hubungi Driver</button><br><br>
+        <button class="btn ghost" id="btnBack2">Kembali</button>
+      </div>
+    </section>
+
+    <!-- Slide 4: Rating -->
+    <section class="slide" id="slideRating">
+      <div class="card">
+        <h3>Berikan Rating</h3>
+        <label>Rating (1–5)</label>
+        <select id="ratingSelect">
+          <option value="5">5 - Sangat Baik</option>
+          <option value="4">4 - Baik</option>
+          <option value="3">3 - Cukup</option>
+          <option value="2">2 - Kurang</option>
+          <option value="1">1 - Buruk</option>
+        </select>
+        <label>Ulasan</label>
+        <textarea id="reviewText" rows="3"></textarea>
+        <button class="btn" id="btnSubmitRating">Kirim</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>© EduRide — Slide Prototype Final</footer>
+
+  <script>
+    const slides=document.querySelectorAll('.slide');
+    let current=0,selectedService='',selectedDriver=null;
+    function goToSlide(i){
+      slides[current].classList.remove('active');
+      slides[current].classList.add('prev');
+      slides[i].classList.add('active');
+      slides[i].classList.remove('prev');
+      current=i;
+    }
+
+    document.getElementById('btnOjek').onclick=()=>{selectedService='Ojek / Antar-Jemput';showService();}
+    document.getElementById('btnDelivery').onclick=()=>{selectedService='Delivery';showService();}
+    function showService(){
+      document.getElementById('selectedServiceText').innerText='Layanan dipilih: '+selectedService;
+      goToSlide(1);
+    }
+
+    const drivers=[
+      {id:1,name:'Faiq',phone:'+6281939770055',rating:4.8,status:'available'},
+      {id:2,name:'Nadila',phone:'+6281335580294',rating:4.6,status:'available'},
+      {id:3,name:'Nuzil',phone:'+6285234468824',rating:4.9,status:'available'}
+    ];
+    const container=document.getElementById('driversContainer');
+
+    document.getElementById('btnCariDriver').onclick=()=>{
+      const nama=document.getElementById('inputNama').value.trim();
+      const tujuan=document.getElementById('inputTujuan').value.trim();
+      if(!nama||!tujuan){alert('Isi nama dan tujuan terlebih dahulu');return;}
+      container.innerHTML='';
+      drivers.forEach(d=>{
+        const div=document.createElement('div');
+        div.className='driver';
+        div.innerHTML=`<strong>${d.name}</strong><br><span class='status available'>${d.status}</span><br>⭐ ${d.rating}`;
+        div.onclick=()=>selectDriver(d);
+        container.appendChild(div);
+      });
+      goToSlide(2);
+    };
+
+    function selectDriver(d){
+      selectedDriver=d;
+      document.getElementById('selectedDriverInfo').innerHTML=`Driver: <b>${d.name}</b><br>Rating: ${d.rating}`;
+      goToSlide(3);
+    }
+
+    document.getElementById('btnConfirmPay').onclick=()=>{
+      if(!selectedDriver)return alert('Pilih driver dulu');
+      const wa=`https://wa.me/${selectedDriver.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent('Halo '+selectedDriver.name+', saya '+document.getElementById('inputNama').value+' ingin pesan '+selectedService+'.')}`;
+      window.open(wa,'_blank');
+      goToSlide(4);
+    };
+
+    document.getElementById('btnSubmitRating').onclick=()=>{
+      const val=document.getElementById('ratingSelect').value;
+      const txt=document.getElementById('reviewText').value.trim();
+      alert(`Terima kasih! Rating ${val}/5 dikirim.\nUlasan: ${txt}`);
+      goToSlide(0);
+    };
+
+    document.getElementById('btnBack0').onclick=()=>goToSlide(0);
+    document.getElementById('btnBack1').onclick=()=>goToSlide(1);
+    document.getElementById('btnBack2').onclick=()=>goToSlide(2);
+  </script>
+</body>
+</html>
